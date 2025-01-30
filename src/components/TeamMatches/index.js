@@ -1,24 +1,25 @@
 import {Component} from 'react'
+import {withRouter} from 'react-router-dom'
 import Loader from 'react-loader-spinner'
+import {PieChart, Pie, Cell, Legend} from 'recharts'
 
 import LatestMatch from '../LatestMatch'
 import MatchCard from '../MatchCard'
 
 import './index.css'
 
-const teamMatchesApiUrl = 'https://apis.ccbp.in/ipl/'
-
 class TeamMatches extends Component {
   state = {
     isLoading: true,
-    teamMatchesData: {},
+    recentMatchesData: {},
+    count: 0, // Initialize count in state
   }
 
   componentDidMount() {
-    this.getTeamMatches()
+    this.getRecentMatches()
   }
 
-  getFormattedData = data => ({
+  getFormattedObject = data => ({
     umpires: data.umpires,
     result: data.result,
     manOfTheMatch: data.man_of_the_match,
@@ -32,57 +33,31 @@ class TeamMatches extends Component {
     matchStatus: data.match_status,
   })
 
-  getTeamMatches = async () => {
+  getRecentMatches = async () => {
     const {match} = this.props
     const {params} = match
     const {id} = params
 
-    const response = await fetch(`${teamMatchesApiUrl}${id}`)
+    const response = await fetch(`https://apis.ccbp.in/ipl/${id}`)
     const fetchedData = await response.json()
+
     const formattedData = {
       teamBannerURL: fetchedData.team_banner_url,
-      latestMatch: this.getFormattedData(fetchedData.latest_match_details),
-      recentMatches: fetchedData.recent_matches.map(eachMatch =>
-        this.getFormattedData(eachMatch),
+      latestMatch: this.getFormattedObject(fetchedData.latest_match_details),
+      recentMatches: fetchedData.recent_matches.map(recentMatch =>
+        this.getFormattedObject(recentMatch),
       ),
     }
 
-    this.setState({teamMatchesData: formattedData, isLoading: false})
+    // Set recent matches data and update the total match count in state
+    this.setState({
+      recentMatchesData: formattedData,
+      isLoading: false,
+      count: fetchedData.recent_matches.length, // Store the total count of recent matches
+    })
   }
 
-  renderRecentMatchesList = () => {
-    const {teamMatchesData} = this.state
-    const {recentMatches} = teamMatchesData
-
-    return (
-      <ul className="recent-matches-list">
-        {recentMatches.map(recentMatch => (
-          <MatchCard matchDetails={recentMatch} key={recentMatch.id} />
-        ))}
-      </ul>
-    )
-  }
-
-  renderTeamMatches = () => {
-    const {teamMatchesData} = this.state
-    const {teamBannerURL, latestMatch} = teamMatchesData
-
-    return (
-      <div className="responsive-container">
-        <img src={teamBannerURL} alt="team banner" className="team-banner" />
-        <LatestMatch latestMatchData={latestMatch} />
-        {this.renderRecentMatchesList()}
-      </div>
-    )
-  }
-
-  renderLoader = () => (
-    <div data-testid="loader" className="loader-container">
-      <Loader type="Oval" color="#ffffff" height={50} />
-    </div>
-  )
-
-  getRouteClassName = () => {
+  getTeamClassName = () => {
     const {match} = this.props
     const {params} = match
     const {id} = params
@@ -109,9 +84,90 @@ class TeamMatches extends Component {
     }
   }
 
+  // Count Wins, Losses, Draws
+  calculateMatchStats = () => {
+    const {recentMatchesData} = this.state
+    const {recentMatches} = recentMatchesData
+
+    let won = 0
+    let lost = 0
+    let drawn = 0
+
+    recentMatches.forEach(match => {
+      if (match.matchStatus === 'Won') {
+        won += 1
+      } else if (match.matchStatus === 'Lost') {
+        lost += 1
+      } else {
+        drawn += 1
+      }
+    })
+
+    return [
+      {name: 'Won', value: won, color: '#4caf50'},
+      {name: 'Lost', value: lost, color: '#f44336'},
+      {name: 'Drawn', value: drawn, color: '#ff9800'},
+    ]
+  }
+
+  renderLoader = () => (
+    <div testid="loader" className="loader-container">
+      <Loader type="Oval" color="#ffffff" height="50" />
+    </div>
+  )
+
+  renderTeamMatches = () => {
+    const {recentMatchesData, count} = this.state
+    const {teamBannerURL, recentMatches, latestMatch} = recentMatchesData
+    const matchStats = this.calculateMatchStats()
+
+    return (
+      <div className="team-matches-container">
+        <button
+          className="back-button"
+          type="button"
+          onClick={() => this.props.history.push('/')}
+        >
+          Back
+        </button>
+
+        <img src={teamBannerURL} alt="team banner" className="team-banner" />
+        <LatestMatch latestMatchData={latestMatch} />
+        <ul className="recent-matches-list">
+          {recentMatches.map(recentMatch => (
+            <MatchCard matchData={recentMatch} key={recentMatch.id} />
+          ))}
+        </ul>
+
+        {/* Display the total number of matches */}
+        <h2>Total Matches Played: {count}</h2>
+
+        {/* Pie Chart Section */}
+        <div className="pie-chart-container">
+          <h2 className="chart-heading">Match Statistics</h2>
+          <PieChart width={300} height={300}>
+            <Pie
+              data={matchStats}
+              cx="50%"
+              cy="50%"
+              outerRadius={100}
+              dataKey="value"
+              label
+            >
+              {matchStats.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Legend />
+          </PieChart>
+        </div>
+      </div>
+    )
+  }
+
   render() {
     const {isLoading} = this.state
-    const className = `team-matches-container ${this.getRouteClassName()}`
+    const className = `team-matches-route-container ${this.getTeamClassName()}`
 
     return (
       <div className={className}>
@@ -121,4 +177,4 @@ class TeamMatches extends Component {
   }
 }
 
-export default TeamMatches
+export default withRouter(TeamMatches)
