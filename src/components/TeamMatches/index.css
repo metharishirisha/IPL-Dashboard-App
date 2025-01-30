@@ -1,4 +1,4 @@
-/* Write your CSS here */
+/* General Styling */
 .team-matches-route-container {
   display: flex;
   justify-content: center;
@@ -6,6 +6,7 @@
   min-height: 100vh;
 }
 
+/* Team-Specific Backgrounds */
 .rcb {
   background: linear-gradient(to top, #1e293b, #a4261d);
 }
@@ -38,10 +39,15 @@
   background: linear-gradient(to top, #1e293b, #4f5db0);
 }
 
+/* Team Matches Container */
 .team-matches-container {
   width: 90%;
   max-width: 500px;
   margin-top: 48px;
+  text-align: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
 }
 
 @media screen and (min-width: 768px) {
@@ -51,10 +57,14 @@
   }
 }
 
+/* Team Banner */
 .team-banner {
   width: 100%;
+  border-radius: 10px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.3);
 }
 
+/* Recent Matches */
 .recent-matches-list {
   display: flex;
   justify-content: space-between;
@@ -67,4 +77,42 @@
   .recent-matches-list {
     margin-top: 32px;
   }
+}
+
+/* Back Button */
+.back-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.back-button:hover {
+  background-color: #0056b3;
+}
+
+/* Pie Chart Section */
+.pie-chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 400px;
+}
+
+h2 {
+  font-size: 24px;
+  color: #ff9800;
+  margin-bottom: 10px;
 }
